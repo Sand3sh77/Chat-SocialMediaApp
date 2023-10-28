@@ -16,9 +16,6 @@ app.listen(5000, (req, res) => {
     console.log("Server running on port 5000");
 })
 
-mongoose.connect(SECRET_STRING, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(SECRET_STRING)
     .then(() => console.log("MongoDB connection established"))
-    .catch((error) => console.error("MongoDB connection failed :", error.message))
+    .catch((error) => console.log("MongoDB connection failed :", error.message))

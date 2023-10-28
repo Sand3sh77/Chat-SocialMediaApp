@@ -1,4 +1,4 @@
-import { db } from "../connect.js";
+import db from "../connect.js";
 import chatModel from "../models/chatModel.js";
 
 export const createChat = async (req, res) => {
@@ -6,7 +6,7 @@ export const createChat = async (req, res) => {
 
     try {
         const chat = await chatModel.findOne({
-            members: { $all: [firstId, secondId] }
+            members: { $all: [+firstId, +secondId] }
         })
         if (chat) return res.status(200).json(chat);
 
@@ -43,11 +43,11 @@ export const findUserChats = async (req, res) => {
                 }
             }
 
+            let resp = [];
             const q = "SELECT name,profilePic,id FROM users WHERE id IN (?) ORDER BY FIELD(id, ?)";
             db.query(q, [id, id], (err, data) => {
                 if (err) return res.json(err);
 
-                let resp = [];
 
                 for (let i = 0; i < data.length; i++) {
                     resp.push({
@@ -55,22 +55,21 @@ export const findUserChats = async (req, res) => {
                         user_data: data[i]
                     });
                 }
-                const query = "SELECT DISTINCT u.name, u.profilePic, u.id FROM users u INNER JOIN relationships r ON u.id=r.followedUserId WHERE r.followerUserId=(?) AND r.followedUserId NOT IN (?);";
-
-                db.query(query, [userId, id], (err, data) => {
-                    if (err) return res.json(err);
-
-                    let final_resp = { message: "Chats obtained successfully", resp, suggestedChatUsers: data }
-                    return res.status(200).json(final_resp);
-                });
-                return;
+                return res.status(200);
             });
-            return;
+
+            const query = "SELECT DISTINCT u.name, u.profilePic, u.id FROM users u INNER JOIN relationships r ON u.id=r.followedUserId WHERE r.followerUserId=(?) AND r.followedUserId NOT IN (?);";
+            db.query(query, [userId, id], (err, data) => {
+                if (err) return res.json(err);
+
+                let final_resp = { message: "Chats obtained successfully", resp, suggestedChatUsers: data }
+                return res.status(200).json(final_resp);
+            });
         }
 
     } catch (error) {
         console.error("Error:", error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
 }
 
@@ -79,10 +78,19 @@ export const findChat = async (req, res) => {
     const { firstId, secondId } = req.params;
     try {
         const chat = await chatModel.findOne({
-            members: { $all: [firstId, secondId] }
+            members: { $all: [+firstId, +secondId] }
         })
+        const q = "SELECT name,profilePic,id FROM users WHERE id=(?)";
+        db.query(q, [secondId], (err, data) => {
+            if (err) return res.json(err);
+            const resp = [];
+            resp.push({
+                chat: chat,
+                recepient_data: data
+            });
+            return res.status(200).json(resp);
+        });
 
-        res.status(200).json(chat);
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json(error);
