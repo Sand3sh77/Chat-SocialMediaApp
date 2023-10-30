@@ -7,7 +7,7 @@ import messageRoute from './routes/messageRoute.js';
 
 const app = express();
 const corsOptions = {
-    origin: ['https://safebook.vercel.app/', 'http://localhost:5173'],
+    origin: ['https://safebook.vercel.app', 'http://localhost:5173'],
     optionsSuccessStatus: 200,
 }
 
