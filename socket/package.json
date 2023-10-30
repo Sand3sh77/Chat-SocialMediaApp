@@ -1,6 +1,7 @@
 {
-  "name": "server",
+  "name": "socket",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -12,12 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "mongoose": "^7.6.3",
-    "mysql": "^2.18.1",
-    "nodemon": "^3.0.1"
-  },
-  "description": ""
+    "nodemon": "^3.0.1",
+    "socket.io": "^4.7.2"
+  }
 }
