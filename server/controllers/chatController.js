@@ -1,5 +1,6 @@
 import pool from "../connect.js";
 import chatModel from "../models/chatModel.js";
+import messageModel from "../models/messageModel.js";
 
 export const createChat = async (req, res) => {
     const { firstId, secondId } = req.body;
@@ -33,18 +34,29 @@ export const findUserChats = async (req, res) => {
         }).sort({ updatedAt: -1 });
 
         let id = [];
+        let chatIds = [];
 
         if (chats) {
+
             for (let i = 0; i < chats.length; i++) {
                 for (let j = 0; j < 2; j++) {
                     if (chats[i].members[j] != userId) {
                         id.push(chats[i].members[j]);
                     }
                 }
+                chatIds.push(chats[i]._id);
             }
             if (id.length > 0) {
-
                 let resp = [];
+
+                // TO GET THE LAST MESSAGE
+                const latestMessages = await Promise.all(chatIds.map(async (chatId) => {
+                    const latestMessage = await messageModel.findOne({
+                        chatId: chatId
+                    }).sort({ updatedAt: -1 });
+                    return latestMessage;
+                }));
+
                 const q = "SELECT name,profilePic,id FROM users WHERE id IN (?) ORDER BY FIELD(id, ?)";
                 pool.query(q, [id, id], (err, data) => {
                     if (err) return res.json(err);
@@ -53,9 +65,15 @@ export const findUserChats = async (req, res) => {
                     for (let i = 0; i < data.length; i++) {
                         resp.push({
                             chat: chats[i],
+                            latestMessage: latestMessages[i],
                             user_data: data[i]
                         });
                     }
+                    // resp.sort((a, b) => {
+                    //     if (!a.latestMessage || !b.latestMessage) return 0;
+                    //     return new Date(b.latestMessage.createdAt) - new Date(a.latestMessage.createdAt);
+                    // });
+
                     const query = "SELECT DISTINCT u.name, u.profilePic, u.id FROM users u INNER JOIN relationships r ON u.id=r.followedUserId WHERE r.followerUserId=(?) AND r.followedUserId NOT IN (?);";
                     pool.query(query, [userId, id], (err, data) => {
                         if (err) return res.json(err);
