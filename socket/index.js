@@ -1,6 +1,16 @@
 import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 
-const io = new Server({ cors: "http://localhost:5173", cors: "https://safebook.vercel.app/" });
+const io = new Server({
+    cors: {
+        origin: ["http://localhost:5173", "https://safebook.vercel.app", "https://admin.socket.io"],
+        credentials: true
+    }
+});
+
+instrument(io, {
+    auth: false
+});
 
 let onlineUsers = [];
 
