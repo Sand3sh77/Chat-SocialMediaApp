@@ -12,7 +12,7 @@ export const createChat = async (req, res) => {
         if (chat) return res.status(200).json(chat);
 
         const newChat = new chatModel({
-            members: [firstId, secondId]
+            members: [+firstId, +secondId]
         })
 
         const response = await newChat.save();
@@ -69,10 +69,12 @@ export const findUserChats = async (req, res) => {
                             user_data: data[i]
                         });
                     }
-                    // resp.sort((a, b) => {
-                    //     if (!a.latestMessage || !b.latestMessage) return 0;
-                    //     return new Date(b.latestMessage.createdAt) - new Date(a.latestMessage.createdAt);
-                    // });
+
+                    resp.sort((a, b) => {
+                        const aTime = a.latestMessage ? new Date(a.latestMessage.createdAt) : new Date(a.chat.createdAt);
+                        const bTime = b.latestMessage ? new Date(b.latestMessage.createdAt) : new Date(b.chat.createdAt);
+                        return bTime - aTime;
+                    });
 
                     const query = "SELECT DISTINCT u.name, u.profilePic, u.id FROM users u INNER JOIN relationships r ON u.id=r.followedUserId WHERE r.followerUserId=(?) AND r.followedUserId NOT IN (?);";
                     pool.query(query, [userId, id], (err, data) => {
